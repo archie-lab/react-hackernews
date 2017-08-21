@@ -35,7 +35,7 @@ const Search = ({search, onChange, children, onSubmit}) =>
     <button type="submit">{children}</button>
   </form>
 
-const Button = ({onClick, className = '', children}) =>
+const Button = ({onClick, className, children}) =>
   <button
     className={className}
     onClick={onClick}
@@ -131,8 +131,34 @@ class App extends Component {
   }
 }
 
+Button.defaultProps = {
+  className: ''
+}
+
+Button.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  className: PropTypes.string,
+  children: PropTypes.node.isRequired
+}
+
 Search.propTypes = {
-  search: PropTypes.string.isRequired
+  search: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  children: PropTypes.string.isRequired,
+  onSubmit: PropTypes.func.isRequired
+}
+
+NewsList.propTypes = {
+  list: PropTypes.arrayOf(PropTypes.shape({
+    objectID: PropTypes.string.isRequired,
+    title: PropTypes.string,
+    author: PropTypes.string,
+    url: PropTypes.string,
+    num_comments: PropTypes.number,
+    points: PropTypes.number
+  })).isRequired,
+  onDismiss: PropTypes.func,
+  pattern: PropTypes.string
 }
 
 export default App
