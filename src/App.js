@@ -2,6 +2,11 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import './App.css'
 
+const DEFAULT_QUERY = 'redux'
+const PATH_BASE = 'https://hn.algolia.com/api/v1'
+const PATH_SEARCH = '/search'
+const PARAM_SEARCH = 'query='
+
 // just to show inline style usage
 const largeColumn = {
   width: '40%'
@@ -51,24 +56,40 @@ const NewsList = ({list, pattern, onDismiss}) =>
 class App extends Component {
   constructor (props) {
     super(props)
-    this.state = {list: LIST, search: ''}
+    this.state = {search: DEFAULT_QUERY, result: null}
   }
 
   onDismiss = (id) => {
-    this.setState({list: this.state.list.filter(item => item.objectID !== id)})
+    const updatedHits = this.state.result.hits.filter(item => item.objectID !== id)
+    // this.setState({result: Object.assign({}, this.state.result, {hits: updatedHits})}) // use Object.assign
+    this.setState({result: {...this.state.result, hits: updatedHits}}) // use spread for object
   }
 
   onSearchChange = (e) => {
     this.setState({search: e.target.value})
   }
 
+  setTopStories = (result) => this.setState({result: result})
+
+  fetchTopStories = (searchInput) => {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchInput}`)
+      .then(res => res.json())
+      .then(result => this.setTopStories(result))
+      .catch(e => e)
+  }
+
+  componentDidMount () {
+    const {search} = this.state
+    this.fetchTopStories(search)
+  }
+
   render () {
-    const {list, search} = this.state
+    const {search, result} = this.state
     return (
       <div className="page">
         <div className="interactions">
           <Search search={search} onChange={this.onSearchChange}>Search</Search>
-          <NewsList list={list} pattern={search} onDismiss={this.onDismiss} />
+          {result && <NewsList list={result.hits} pattern={search} onDismiss={this.onDismiss} />}
         </div>
       </div>
     )
@@ -78,24 +99,5 @@ class App extends Component {
 Search.propTypes = {
   search: PropTypes.string.isRequired
 }
-
-const LIST = [
-  {
-    title: 'React',
-    url: 'https://facebook.github.io/react/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0
-  },
-  {
-    title: 'Redux',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1
-  }
-]
 
 export default App
