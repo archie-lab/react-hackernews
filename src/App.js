@@ -4,7 +4,7 @@ import './App.css'
 
 const DEFAULT_QUERY = 'redux'
 const DEFAULT_PAGE = 0
-const DEFAULT_HPP = '100'
+const DEFAULT_HPP = '2'
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1'
 const PATH_SEARCH = '/search'
@@ -63,13 +63,15 @@ const NewsList = ({list, pattern, onDismiss}) =>
 class App extends Component {
   constructor (props) {
     super(props)
-    this.state = {search: DEFAULT_QUERY, result: null}
+    this.state = {search: DEFAULT_QUERY, results: null, searchKey: ''}
   }
 
   onDismiss = (id) => {
-    const updatedHits = this.state.result.hits.filter(item => item.objectID !== id)
-    // this.setState({result: Object.assign({}, this.state.result, {hits: updatedHits})}) // use Object.assign
-    this.setState({result: {...this.state.result, hits: updatedHits}}) // use spread for object
+    const updatedHits = this.state.results[this.state.searchKey].hits.filter(item => item.objectID !== id)
+    // use Object.assign
+    // this.setState({result: Object.assign({}, this.state.result, {hits: updatedHits})})
+    // use spread for object
+    this.setState({results: {...this.state.results, [this.state.searchKey]: {hits: updatedHits}}})
   }
 
   onSearchChange = (e) => {
@@ -78,9 +80,17 @@ class App extends Component {
 
   setTopStories = (result) => {
     const {hits, page} = result
-    const oldHits = page !== 0 ? this.state.result.hits : [];
+    const {results, searchKey} = this.state
+    const oldHits = page !== 0 ? (results && results[searchKey]
+      ? results[searchKey].hits
+      : []) : []
     const updatedHits = [...oldHits, ...hits]
-    this.setState({result: {...result, hits: updatedHits}})
+    this.setState({
+      results: {
+        ...results,
+        [searchKey]: {hits: updatedHits, page}
+      }
+    })
   }
 
   fetchTopStories = (searchInput, page = DEFAULT_PAGE) => {
@@ -92,22 +102,27 @@ class App extends Component {
 
   onSearchSubmit = (e) => {
     e.preventDefault()
-    this.fetchTopStories(this.state.search)
+    this.setState({searchKey: this.state.search})
+    if (!(this.state.results && this.state.results[this.state.search])) {
+      this.fetchTopStories(this.state.search)
+    }
   }
 
   componentDidMount () {
     const {search} = this.state
+    this.setState({searchKey: search})
     this.fetchTopStories(search)
   }
 
   render () {
-    const {search, result} = this.state
-    const page = (result && result.page) || DEFAULT_PAGE
+    const {search, results, searchKey} = this.state
+    const page = (results && results[searchKey] && results[searchKey].page) || DEFAULT_PAGE
     return (
       <div className="page">
         <div className="interactions">
           <Search search={search} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>Search</Search>
-          {result && <NewsList list={result.hits} pattern={search} onDismiss={this.onDismiss} />}
+          {results && results[searchKey] &&
+          <NewsList list={results[searchKey].hits} pattern={search} onDismiss={this.onDismiss} />}
         </div>
         <div>
           <Button onClick={() => this.fetchTopStories(search, page + 1)}>More</Button>
