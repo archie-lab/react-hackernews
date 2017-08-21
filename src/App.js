@@ -3,9 +3,14 @@ import PropTypes from 'prop-types'
 import './App.css'
 
 const DEFAULT_QUERY = 'redux'
+const DEFAULT_PAGE = 0
+const DEFAULT_HPP = '100'
+
 const PATH_BASE = 'https://hn.algolia.com/api/v1'
 const PATH_SEARCH = '/search'
 const PARAM_SEARCH = 'query='
+const PARAM_PAGE = 'page='
+const PARAM_HPP = 'hitsPerPage='
 
 // just to show inline style usage
 const largeColumn = {
@@ -71,10 +76,15 @@ class App extends Component {
     this.setState({search: e.target.value})
   }
 
-  setTopStories = (result) => this.setState({result: result})
+  setTopStories = (result) => {
+    const {hits, page} = result
+    const oldHits = page !== 0 ? this.state.result.hits : [];
+    const updatedHits = [...oldHits, ...hits]
+    this.setState({result: {...result, hits: updatedHits}})
+  }
 
-  fetchTopStories = (searchInput) => {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchInput}`)
+  fetchTopStories = (searchInput, page = DEFAULT_PAGE) => {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchInput}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(res => res.json())
       .then(result => this.setTopStories(result))
       .catch(e => e)
@@ -92,11 +102,15 @@ class App extends Component {
 
   render () {
     const {search, result} = this.state
+    const page = (result && result.page) || DEFAULT_PAGE
     return (
       <div className="page">
         <div className="interactions">
           <Search search={search} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>Search</Search>
           {result && <NewsList list={result.hits} pattern={search} onDismiss={this.onDismiss} />}
+        </div>
+        <div>
+          <Button onClick={() => this.fetchTopStories(search, page + 1)}>More</Button>
         </div>
       </div>
     )
