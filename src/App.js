@@ -67,11 +67,10 @@ class App extends Component {
   }
 
   onDismiss = (id) => {
-    const updatedHits = this.state.results[this.state.searchKey].hits.filter(item => item.objectID !== id)
-    // use Object.assign
-    // this.setState({result: Object.assign({}, this.state.result, {hits: updatedHits})})
-    // use spread for object
-    this.setState({results: {...this.state.results, [this.state.searchKey]: {hits: updatedHits}}})
+    const {results, searchKey} = this.state
+    const {hits, page} = results[searchKey]
+    const updatedHits = hits.filter(item => item.objectID !== id)
+    this.setState({results: {...results, [searchKey]: {hits: updatedHits, page}}})
   }
 
   onSearchChange = (e) => {
