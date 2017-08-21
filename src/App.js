@@ -21,11 +21,13 @@ const smallColumn = {
 }
 
 // use high ordered function
-const isSearched = searchInput => item => !searchInput || item.title.toLowerCase().includes(searchInput.toLowerCase())
+// const isSearched = searchInput => item => !searchInput ||
+//   (!item.title || item.title.toLowerCase().includes(searchInput.toLowerCase()))
 
-const Search = ({search, onChange, children}) =>
-  <form>
+const Search = ({search, onChange, children, onSubmit}) =>
+  <form onSubmit={onSubmit}>
     {children}<input type="text" value={search} onChange={onChange} />
+    <button type="submit">{children}</button>
   </form>
 
 const Button = ({onClick, className = '', children}) =>
@@ -38,7 +40,7 @@ const Button = ({onClick, className = '', children}) =>
 
 const NewsList = ({list, pattern, onDismiss}) =>
   <div className="table">
-    {list.filter(isSearched(pattern)).map(item =>
+    {list.map(item =>
       <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
@@ -78,6 +80,11 @@ class App extends Component {
       .catch(e => e)
   }
 
+  onSearchSubmit = (e) => {
+    e.preventDefault()
+    this.fetchTopStories(this.state.search)
+  }
+
   componentDidMount () {
     const {search} = this.state
     this.fetchTopStories(search)
@@ -88,7 +95,7 @@ class App extends Component {
     return (
       <div className="page">
         <div className="interactions">
-          <Search search={search} onChange={this.onSearchChange}>Search</Search>
+          <Search search={search} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>Search</Search>
           {result && <NewsList list={result.hits} pattern={search} onDismiss={this.onDismiss} />}
         </div>
       </div>
