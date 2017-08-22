@@ -161,4 +161,10 @@ NewsList.propTypes = {
   pattern: PropTypes.string
 }
 
+export {
+  Search,
+  Button,
+  NewsList
+}
+
 export default App
