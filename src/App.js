@@ -4,7 +4,7 @@ import './App.css'
 
 const DEFAULT_QUERY = 'redux'
 const DEFAULT_PAGE = 0
-const DEFAULT_HPP = '2'
+const DEFAULT_HPP = '10'
 
 const PATH_BASE = 'https://hn.algolia.com/api/v1'
 const PATH_SEARCH = '/search'
