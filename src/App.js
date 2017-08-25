@@ -29,11 +29,21 @@ const smallColumn = {
 // const isSearched = searchInput => item => !searchInput ||
 //   (!item.title || item.title.toLowerCase().includes(searchInput.toLowerCase()))
 
-const Search = ({search, onChange, children, onSubmit}) =>
-  <form onSubmit={onSubmit}>
-    {children}<input type="text" value={search} onChange={onChange} />
-    <button type="submit">{children}</button>
-  </form>
+class Search extends Component {
+  componentDidMount () {
+    this.input.focus()
+    this.input.setSelectionRange(this.props.search.length, this.props.search.length)
+  }
+
+  render () {
+    const {search, onChange, children, onSubmit} = this.props
+
+    return (<form onSubmit={onSubmit}>
+      {children}<input type="text" value={search} onChange={onChange} ref={(node) => { this.input = node }} />
+      <button type="submit">{children}</button>
+    </form>)
+  }
+}
 
 const Button = ({onClick, className, children}) =>
   <button
