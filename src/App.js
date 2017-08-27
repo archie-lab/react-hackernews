@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { sortBy } from 'lodash'
+import classnames from 'classnames'
 import './App.css'
 
 const DEFAULT_QUERY = 'redux'
@@ -23,6 +25,14 @@ const midColumn = {
 
 const smallColumn = {
   width: '10%'
+}
+
+const SORTS = {
+  NONE: list => list,
+  TITLE: list => sortBy(list, 'title'),
+  AUTHOR: list => sortBy(list, 'author'),
+  COMMENTS: list => sortBy(list, 'num_comments').reverse(),
+  POINTS: list => sortBy(list, 'points').reverse()
 }
 
 // use high ordered function
@@ -60,9 +70,39 @@ const withLoading = (Component) => ({isLoading, ...rest}) => isLoading ? <Loadin
 
 const ButtonWithLoading = withLoading(Button)
 
-const NewsList = ({list, pattern, onDismiss}) =>
-  <div className="table">
-    {list.map(item =>
+const Sort = ({sortKey, onSort, children, activeSortKey}) => {
+  const sortaClass = classnames(
+    'button-inline',
+    {'button-active': sortKey === activeSortKey}
+  )
+  return <Button onClick={() => onSort(sortKey)}
+                 className={sortaClass}>{children}</Button>
+}
+
+const NewsList = ({list, pattern, onDismiss, onSort, sortKey, isSortReverse}) => {
+  let sortedList = SORTS[sortKey](list)
+  if (isSortReverse) {
+    sortedList = sortedList.reverse()
+  }
+  return <div className="table">
+    <div className="table-header">
+      <span style={largeColumn}>
+        <Sort sortKey="TITLE" onSort={onSort} activeSortKey={sortKey}>Title</Sort>
+      </span>
+      <span style={midColumn}>
+        <Sort sortKey="AUTHOR" onSort={onSort} activeSortKey={sortKey}>Author</Sort>
+      </span>
+      <span style={smallColumn}>
+        <Sort sortKey="COMMENTS" onSort={onSort} activeSortKey={sortKey}>Comments</Sort>
+      </span>
+      <span style={smallColumn}>
+        <Sort sortKey="POINTS" onSort={onSort} activeSortKey={sortKey}>Points</Sort>
+      </span>
+      <span style={smallColumn}>
+        Archive
+      </span>
+    </div>
+    {sortedList.map(item =>
       <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
@@ -76,11 +116,19 @@ const NewsList = ({list, pattern, onDismiss}) =>
       </div>
     )}
   </div>
+}
 
 class App extends Component {
   constructor (props) {
     super(props)
-    this.state = {search: DEFAULT_QUERY, results: null, searchKey: '', isLoading: true}
+    this.state = {
+      search: DEFAULT_QUERY,
+      results: null,
+      searchKey: '',
+      isLoading: true,
+      sortKey: 'NONE',
+      isSortReverse: false
+    }
   }
 
   onDismiss = (id) => {
@@ -92,6 +140,11 @@ class App extends Component {
 
   onSearchChange = (e) => {
     this.setState({search: e.target.value})
+  }
+
+  onSort = (sortKey) => {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse
+    this.setState({sortKey, isSortReverse})
   }
 
   setTopStories = (result) => {
@@ -133,14 +186,19 @@ class App extends Component {
   }
 
   render () {
-    const {search, results, searchKey, isLoading} = this.state
+    const {search, results, searchKey, isLoading, sortKey, isSortReverse} = this.state
     const page = (results && results[searchKey] && results[searchKey].page) || DEFAULT_PAGE
     return (
       <div className="page">
         <div className="interactions">
           <Search search={search} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>Search</Search>
           {results && results[searchKey] &&
-          <NewsList list={results[searchKey].hits} pattern={search} onDismiss={this.onDismiss} />}
+          <NewsList list={results[searchKey].hits}
+                    pattern={search}
+                    onDismiss={this.onDismiss}
+                    sortKey={sortKey}
+                    onSort={this.onSort}
+                    isSortReverse={isSortReverse} />}
         </div>
         <div>
           {<ButtonWithLoading
