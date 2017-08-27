@@ -7,11 +7,11 @@ import App, { Search, Button, NewsList } from './App'
 describe('App', () => {
   it('renders', () => {
     const div = document.createElement('div')
-    ReactDOM.render(<App />, div)
+    ReactDOM.render(<App isLoading />, div)
   })
 
   test('snapshots', () => {
-    const component = renderer.create(<App />)
+    const component = renderer.create(<App isLoading />)
     let tree = component.toJSON()
     expect(tree).toMatchSnapshot()
   })
