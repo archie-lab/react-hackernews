@@ -35,6 +35,21 @@ const SORTS = {
   POINTS: list => sortBy(list, 'points').reverse()
 }
 
+const updateTopStoriesState = (hits, page) => prevState => {
+  const {results, searchKey} = prevState
+  const oldHits = page !== 0 ? (results && results[searchKey]
+    ? results[searchKey].hits
+    : []) : []
+  const updatedHits = [...oldHits, ...hits]
+  return {
+    results: {
+      ...results,
+      [searchKey]: {hits: updatedHits, page}
+    },
+    isLoading: false
+  }
+}
+
 // use high ordered function
 // const isSearched = searchInput => item => !searchInput ||
 //   (!item.title || item.title.toLowerCase().includes(searchInput.toLowerCase()))
@@ -159,18 +174,7 @@ class App extends Component {
 
   setTopStories = (result) => {
     const {hits, page} = result
-    const {results, searchKey} = this.state
-    const oldHits = page !== 0 ? (results && results[searchKey]
-      ? results[searchKey].hits
-      : []) : []
-    const updatedHits = [...oldHits, ...hits]
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: {hits: updatedHits, page}
-      },
-      isLoading: false
-    })
+    this.setState(updateTopStoriesState(hits, page))
   }
 
   fetchTopStories = (searchInput, page = DEFAULT_PAGE) => {
