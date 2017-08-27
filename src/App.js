@@ -79,43 +79,60 @@ const Sort = ({sortKey, onSort, children, activeSortKey}) => {
                  className={sortaClass}>{children}</Button>
 }
 
-const NewsList = ({list, pattern, onDismiss, onSort, sortKey, isSortReverse}) => {
-  let sortedList = SORTS[sortKey](list)
-  if (isSortReverse) {
-    sortedList = sortedList.reverse()
+class NewsList extends Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      sortKey: 'NONE',
+      isSortReverse: false
+    }
   }
-  return <div className="table">
-    <div className="table-header">
-      <span style={largeColumn}>
-        <Sort sortKey="TITLE" onSort={onSort} activeSortKey={sortKey}>Title</Sort>
-      </span>
-      <span style={midColumn}>
-        <Sort sortKey="AUTHOR" onSort={onSort} activeSortKey={sortKey}>Author</Sort>
-      </span>
-      <span style={smallColumn}>
-        <Sort sortKey="COMMENTS" onSort={onSort} activeSortKey={sortKey}>Comments</Sort>
-      </span>
-      <span style={smallColumn}>
-        <Sort sortKey="POINTS" onSort={onSort} activeSortKey={sortKey}>Points</Sort>
-      </span>
-      <span style={smallColumn}>
+
+  onSort = (sortKey) => {
+    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse
+    this.setState({sortKey, isSortReverse})
+  }
+
+  render () {
+    const {list, onDismiss} = this.props
+    const {sortKey, isSortReverse} = this.state
+    let sortedList = SORTS[sortKey](list)
+    if (isSortReverse) {
+      sortedList = sortedList.reverse()
+    }
+    return <div className="table">
+      <div className="table-header">
+        <span style={largeColumn}>
+          <Sort sortKey="TITLE" onSort={this.onSort} activeSortKey={sortKey}>Title</Sort>
+        </span>
+        <span style={midColumn}>
+          <Sort sortKey="AUTHOR" onSort={this.onSort} activeSortKey={sortKey}>Author</Sort>
+        </span>
+        <span style={smallColumn}>
+          <Sort sortKey="COMMENTS" onSort={this.onSort} activeSortKey={sortKey}>Comments</Sort>
+        </span>
+        <span style={smallColumn}>
+          <Sort sortKey="POINTS" onSort={this.onSort} activeSortKey={sortKey}>Points</Sort>
+        </span>
+        <span style={smallColumn}>
         Archive
       </span>
-    </div>
-    {sortedList.map(item =>
-      <div key={item.objectID} className="table-row">
-        <span style={largeColumn}>
-          <a href={item.url}>{item.title}</a>
-        </span>
-        <span style={midColumn}>{item.author}</span>
-        <span style={smallColumn}>{item.num_comments}</span>
-        <span style={smallColumn}>{item.points}</span>
-        <span style={smallColumn}>
-          <Button className="button-inline" onClick={() => onDismiss(item.objectID)}>Dismiss</Button>
-        </span>
       </div>
-    )}
-  </div>
+      {sortedList.map(item =>
+        <div key={item.objectID} className="table-row">
+          <span style={largeColumn}>
+            <a href={item.url}>{item.title}</a>
+          </span>
+          <span style={midColumn}>{item.author}</span>
+          <span style={smallColumn}>{item.num_comments}</span>
+          <span style={smallColumn}>{item.points}</span>
+          <span style={smallColumn}>
+            <Button className="button-inline" onClick={() => onDismiss(item.objectID)}>Dismiss</Button>
+          </span>
+        </div>
+      )}
+    </div>
+  }
 }
 
 class App extends Component {
@@ -125,9 +142,7 @@ class App extends Component {
       search: DEFAULT_QUERY,
       results: null,
       searchKey: '',
-      isLoading: true,
-      sortKey: 'NONE',
-      isSortReverse: false
+      isLoading: true
     }
   }
 
@@ -140,11 +155,6 @@ class App extends Component {
 
   onSearchChange = (e) => {
     this.setState({search: e.target.value})
-  }
-
-  onSort = (sortKey) => {
-    const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse
-    this.setState({sortKey, isSortReverse})
   }
 
   setTopStories = (result) => {
@@ -186,7 +196,7 @@ class App extends Component {
   }
 
   render () {
-    const {search, results, searchKey, isLoading, sortKey, isSortReverse} = this.state
+    const {search, results, searchKey, isLoading} = this.state
     const page = (results && results[searchKey] && results[searchKey].page) || DEFAULT_PAGE
     return (
       <div className="page">
@@ -195,10 +205,7 @@ class App extends Component {
           {results && results[searchKey] &&
           <NewsList list={results[searchKey].hits}
                     pattern={search}
-                    onDismiss={this.onDismiss}
-                    sortKey={sortKey}
-                    onSort={this.onSort}
-                    isSortReverse={isSortReverse} />}
+                    onDismiss={this.onDismiss} />}
         </div>
         <div>
           {<ButtonWithLoading
@@ -238,8 +245,7 @@ NewsList.propTypes = {
     num_comments: PropTypes.number,
     points: PropTypes.number
   })).isRequired,
-  onDismiss: PropTypes.func,
-  pattern: PropTypes.string
+  onDismiss: PropTypes.func
 }
 
 export {
